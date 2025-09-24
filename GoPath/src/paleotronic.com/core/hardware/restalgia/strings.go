@@ -1,0 +1,86 @@
+package restalgia
+
+func RestCommandString(v int) string {
+
+	switch v {
+	case RF_initFunc:
+		return "initFunc"
+	case RF_getVolume:
+		return "getVolume"
+	case RF_setVolume:
+		return "setVolume"
+	case RF_getFrequency:
+		return "getFrequency"
+	case RF_setFrequency:
+		return "setFrequency"
+	case RF_getEnvelopeAttack:
+		return "getEnvelopeAttack"
+	case RF_setEnvelopeAttack:
+		return "setEnvelopeAttack"
+	case RF_getEnvelopeDecay:
+		return "getEnvelopeDecay"
+	case RF_setEnvelopeDecay:
+		return "setEnvelopeDecay"
+	case RF_getEnvelopeSustain:
+		return "getEnvelopeSustain"
+	case RF_setEnvelopeSustain:
+		return "setEnvelopeSustain"
+	case RF_getEnvelopeRelease:
+		return "getEnvelopeRelease"
+	case RF_setEnvelopeRelease:
+		return "setEnvelopeRelease"
+	case RF_getWaveform:
+		return "getWaveform"
+	case RF_setWaveform:
+		return "setWaveform"
+	case RF_getLFOControl:
+		return "getLFOControl"
+	case RF_setLFOControl:
+		return "setLFOControl"
+	case RF_getLFOFreq:
+		return "getLFOFreq"
+	case RF_setLFOFreq:
+		return "setLFOFreq"
+	case RF_getLFORatio:
+		return "getLFORatio"
+	case RF_setLFORatio:
+		return "setLFORatio"
+	case RF_getLFOWaveform:
+		return "getLFOWaveform"
+	case RF_setLFOWaveform:
+		return "setLFOWaveform"
+	case RF_getEnabled:
+		return "getEnabled"
+	case RF_setEnabled:
+		return "setEnabled"
+	case RF_getEnvShape:
+		return "getEnvShape"
+	case RF_setEnvShape:
+		return "setEnvShape"
+	case RF_getEnvShapeFreq:
+		return "getEnvShapeFreq"
+	case RF_setEnvShapeFreq:
+		return "setEnvShapeFreq"
+	case RF_getEnvShapeEnabled:
+		return "getEnvShapeEnabled"
+	case RF_setEnvShapeEnabled:
+		return "setEnvShapeEnabled"
+	case RF_getColour:
+		return "getColour"
+	case RF_setColour:
+		return "setColour"
+	case RF_getColourRatio:
+		return "getColourRatio"
+	case RF_setColourRatio:
+		return "setColourRatio"
+	case RF_getIsColour:
+		return "getIsColour"
+	case RF_setIsColour:
+		return "setIsColour"
+	case RF_getPan:
+		return "getPan"
+	case RF_setPan:
+		return "setPan"
+	}
+	return "Unknown"
+}

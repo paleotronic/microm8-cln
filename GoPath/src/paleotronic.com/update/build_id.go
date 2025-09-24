@@ -1,0 +1,8 @@
+package update
+
+const (
+	PERCOL8_BUILD   = "202508101609"
+	PERCOL8_GITHASH = "1848e0d4aa718db913f34377fccbc892e0ce7182"
+	PERCOL8_DATE    = "2025-08-10_04:09:38PM"
+)
+

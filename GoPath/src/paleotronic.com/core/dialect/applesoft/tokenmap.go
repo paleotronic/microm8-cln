@@ -1,0 +1,121 @@
+package applesoft
+
+var TokenToCode map[string]uint64
+var CodeToToken map[uint64]string
+
+func init() {
+	TokenToCode = make(map[string]uint64, 0)
+	TokenToCode["END"] = 0x80
+	TokenToCode["FOR"] = 0x81
+	TokenToCode["NEXT"] = 0x82
+	TokenToCode["DATA"] = 0x83
+	TokenToCode["INPUT"] = 0x84
+	TokenToCode["DEL"] = 0x85
+	TokenToCode["DIM"] = 0x86
+	TokenToCode["READ"] = 0x87
+	TokenToCode["GR"] = 0x88
+	TokenToCode["TEXT"] = 0x89
+	TokenToCode["PR#"] = 0x8A
+	TokenToCode["IN#"] = 0x8B
+	TokenToCode["CALL"] = 0x8C
+	TokenToCode["PLOT"] = 0x8D
+	TokenToCode["HLIN"] = 0x8E
+	TokenToCode["VLIN"] = 0x8F
+	TokenToCode["HGR2"] = 0x90
+	TokenToCode["HGR"] = 0x91
+	TokenToCode["HCOLOR="] = 0x92
+	TokenToCode["HPLOT"] = 0x93
+	TokenToCode["DRAW"] = 0x94
+	TokenToCode["XDRAW"] = 0x95
+	TokenToCode["HTAB"] = 0x96
+	TokenToCode["HOME"] = 0x97
+	TokenToCode["ROT="] = 0x98
+	TokenToCode["SCALE="] = 0x99
+	TokenToCode["SHLOAD"] = 0x9A
+	TokenToCode["TRACE"] = 0x9B
+	TokenToCode["NOTRACE"] = 0x9C
+	TokenToCode["NORMAL"] = 0x9D
+	TokenToCode["INVERSE"] = 0x9E
+	TokenToCode["FLASH"] = 0x9F
+	TokenToCode["COLOR="] = 0xA0
+	TokenToCode["POP"] = 0xA1
+	TokenToCode["VTAB"] = 0xA2
+	TokenToCode["HIMEM:"] = 0xA3
+	TokenToCode["LOMEM:"] = 0xA4
+	TokenToCode["ONERR"] = 0xA5
+	TokenToCode["RESUME"] = 0xA6
+	TokenToCode["RECALL"] = 0xA7
+	TokenToCode["STORE"] = 0xA8
+	TokenToCode["SPEED="] = 0xA9
+	TokenToCode["LET"] = 0xAA
+	TokenToCode["GOTO"] = 0xAB
+	TokenToCode["RUN"] = 0xAC
+	TokenToCode["IF"] = 0xAD
+	TokenToCode["RESTORE"] = 0xAE
+	TokenToCode["&"] = 0xAF
+	TokenToCode["GOSUB"] = 0xB0
+	TokenToCode["RETURN"] = 0xB1
+	TokenToCode["REM"] = 0xB2
+	TokenToCode["STOP"] = 0xB3
+	TokenToCode["ON"] = 0xB4
+	TokenToCode["WAIT"] = 0xB5
+	TokenToCode["LOAD"] = 0xB6
+	TokenToCode["SAVE"] = 0xB7
+	TokenToCode["DEF"] = 0xB8
+	TokenToCode["POKE"] = 0xB9
+	TokenToCode["PRINT"] = 0xBA
+	TokenToCode["CONT"] = 0xBB
+	TokenToCode["LIST"] = 0xBC
+	TokenToCode["CLEAR"] = 0xBD
+	TokenToCode["GET"] = 0xBE
+	TokenToCode["NEW"] = 0xBF
+	TokenToCode["TAB"] = 0xC0
+	TokenToCode["TO"] = 0xC1
+	TokenToCode["FN"] = 0xC2
+	TokenToCode["SPC("] = 0xC3
+	TokenToCode["THEN"] = 0xC4
+	TokenToCode["AT"] = 0xC5
+	TokenToCode["NOT"] = 0xC6
+	TokenToCode["STEP"] = 0xC7
+	TokenToCode["+"] = 0xC8
+	TokenToCode["-"] = 0xC9
+	TokenToCode["*"] = 0xCA
+	TokenToCode["/"] = 0xCB
+	TokenToCode[";"] = 0xCC
+	TokenToCode["AND"] = 0xCD
+	TokenToCode["OR"] = 0xCE
+	TokenToCode[">"] = 0xCF
+	TokenToCode["="] = 0xD0
+	TokenToCode["<"] = 0xD1
+	TokenToCode["SGN("] = 0xD2
+	TokenToCode["INT("] = 0xD3
+	TokenToCode["ABS("] = 0xD4
+	TokenToCode["USR("] = 0xD5
+	TokenToCode["FRE("] = 0xD6
+	TokenToCode["SCRN("] = 0xD7
+	TokenToCode["PDL("] = 0xD8
+	TokenToCode["POS("] = 0xD9
+	TokenToCode["SQR("] = 0xDA
+	TokenToCode["RND("] = 0xDB
+	TokenToCode["LOG("] = 0xDC
+	TokenToCode["EXP("] = 0xDD
+	TokenToCode["COS("] = 0xDE
+	TokenToCode["SIN("] = 0xDF
+	TokenToCode["TAN("] = 0xE0
+	TokenToCode["ATN("] = 0xE1
+	TokenToCode["PEEK("] = 0xE2
+	TokenToCode["LEN("] = 0xE3
+	TokenToCode["STR$("] = 0xE4
+	TokenToCode["VAL("] = 0xE5
+	TokenToCode["ASC("] = 0xE6
+	TokenToCode["CHR$("] = 0xE7
+	TokenToCode["LEFT$("] = 0xE8
+	TokenToCode["RIGHT$("] = 0xE9
+	TokenToCode["MID$("] = 0xEA
+
+	// Create the reverse lookup
+	CodeToToken = make(map[uint64]string, 0)
+	for t, c := range TokenToCode {
+		CodeToToken[c] = t
+	}
+}

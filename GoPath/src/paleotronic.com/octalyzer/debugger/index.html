@@ -1,0 +1,1062 @@
+<!doctype html>
+<html class="no-js" lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicroM8 Debug</title>
+    <link rel="stylesheet" href="css/foundation.css">
+    <link rel="stylesheet" href="css/app.css">
+  </head>
+  <body>
+
+      <div class="header">
+      <div class="top-bar">
+          <div class="top-bar-left">
+            <ul class="dropdown menu" data-dropdown-menu>
+              <li class="menu-text">MicroM8 Debugger <span id="vm-number"></span></li>
+              <li class="has-submenu">
+                <a href="#0">Debug</a>
+                <ul class="submenu menu vertical" data-submenu>
+                    <li>
+                        <a href='#0'>Attach</a>
+                        <ul class="menu">
+                            <li><a href="javascript:attach(0);">VM #1</a></li>
+                            <li><a href="javascript:attach(1);">VM #2</a></li>
+                            <li><a href="javascript:attach(2);">VM #3</a></li>
+                            <li><a href="javascript:attach(3);">VM #4</a></li>
+                            <li><a href="javascript:attach(4);">VM #5</a></li>
+                            <li><a href="javascript:attach(5);">VM #6</a></li>
+                            <li><a href="javascript:attach(6);">VM #7</a></li>
+                            <li><a href="javascript:attach(7);">VM #8</a></li>
+                        </ul>
+                      </li>
+                      <li><a href='javascript:detach();'>Detach...</a></li>
+                      <li><a href='javascript:saveState();'>Save Debug state</a></li>
+                      <li><a href='javascript:reset()'>Reset</a></li>
+                </ul>
+              </li>
+              <li class="has-submenu">
+                <a href="#0">Tools</a>
+                <ul class="submenu menu vertical" data-submenu>
+                    <li>
+                        <a href='#0'>Memory</a>
+                        <ul class="menu">
+                            <li><a href="javascript:openDownloader();">Save binary...</a></li>
+                            <li><a href="javascript:openUploader();">Load binary...</a></li>
+                            <li><a href="javascript:openASMUploader();">Assemble source file...</a></li>
+                            <li><a href="javascript:openDumpDownloader();">Save Memory Dump...</a></li>
+                            <li><a href="javascript:openDasmDownloader();">Save Disassembly...</a></li>
+                        </ul>
+                      </li>
+                </ul>
+              </li>
+              <li><a href="https://paleotronic.com/microm8/help/web-debugger/" target="_blank">Help</a></li>
+            </ul>
+          </div>
+
+          <div class="top-bar-right">
+            <ul class="menu">
+              <li><input type="text" id="command" placeholder="setbp PC=$c600"/></li>
+              <li><button type="button" id="commandButton" class="button">Send</button></li>
+            </ul>
+          </div>
+
+          <script type="text/javascript">
+            $('#command').keyup(function(event) {
+              if (event.keyCode === 13) {
+                  console.log("Enter pressed");
+                  $('#commandButton').click();
+              }
+            });
+    
+            $('#commandButton').click(function() {
+              console.log("Button has been clicked");
+            });
+          </script>
+
+        </div>
+
+      </div>
+
+      <div class="content">
+
+      <div id="messages">
+      </div>
+      
+      <div>
+                <div class="toolbar">
+
+                  <span id="cpu-controls" style="white-space: nowrap; margin-right: 36px;">
+
+                    <button id="cpu-step"  type="button" class="tiny button" onclick="stepCPU();">S&#x2190;</button>
+                    <button id="cpu-stepx"  type="button" class="tiny button" onclick="stepCPUOut();">S&#x2192;</button>
+                    <button id="cpu-stepo"  type="button" class="tiny button" onclick="stepCPUOver();">S&#x21b7;</button>
+                    <button id="cpu-pause" type="button" class="tiny button" onclick="pauseCPU();">Pause</button>
+                    <button id="cpu-continue" type="button" class="tiny button" onclick="runCPU();">Continue</button>
+                    <button id="cpu-go" type="button" class="tiny button success" data-toggle="go-dropdown">Go ...</button>
+                    <button id="cpu-trace" type="button" class="tiny button warning" onclick="traceOn();">Trace</button>
+                    <button id="cpu-trace-off" type="button" class="tiny button warning" onclick="traceOff();">Stop trace</button>
+
+                    <!-- live rewind controls -->
+                    <button type="button" class="tiny button clear">CPU Speed:</button>
+                    <!-- <span id="cpu-speed-label" class="tiny button secondary clear speed">1x</span> -->
+                    <button id="cpu-speed-025x" type="button" class="tiny button warp" onclick="setWarp(0.25);">0.25x</button>
+                    <button id="cpu-speed-05x" type="button" class="tiny button warp" onclick="setWarp(0.5);">0.50x</button>
+                    <button id="cpu-speed-1x" type="button" class="tiny button warp" onclick="setWarp(1);">1.00x</button>
+                    <button id="cpu-speed-2x" type="button" class="tiny button warp" onclick="setWarp(2);">2.00x</button>
+                    <button id="cpu-speed-4x" type="button" class="tiny button warp" onclick="setWarp(4);">4.00x</button>
+
+
+                  </span>
+                    <!-- live rewind controls -->
+
+                    <span id="record-controls" style="white-space: nowrap;">
+
+                      <button type="button" id="lr-resume" disabled class="tiny button alert" onclick="lrResume();">&nbsp;&#x2B24;&#x25b6;</button>
+                      <button type="button" id="lr-resume-paused" disabled class="tiny button alert" onclick="lrResumePaused();">&#x2B24;&#x275a;&#x275a;</button>
+                      <button type="button" id="lr-start" disabled class="tiny button warning" onclick="lrStart();">&nbsp;&#x275a;&#x25c0;</button>
+                      <button type="button" id="lr-pause" disabled class="tiny button warning" onclick="lrPause();">&nbsp;&#x275a;&#x275a;</button>
+                      <button type="button" id="lr-play" disabled class="tiny button warning" onclick="lrForward1x();">&nbsp;&#x25b6;&nbsp;</button>
+                      <button type="button" id="lr-back" disabled class="tiny button warning" onclick="lrBack();">&nbsp;&#x25c0;&#x25c0;</button>
+                      <button type="button" id="lr-forward" disabled class="tiny button warning" onclick="lrForward();">&nbsp;&#x25b6;&#x25b6;</button>
+
+                      <button type="button" disabled id="lr-skip1000b" class="tiny button success" onclick="lrSkip(-1000);">-1000</button>
+                      <button type="button" disabled id="lr-skip100b" class="tiny button success" onclick="lrSkip(-100);">-100</button>
+
+                      <button type="button" disabled id="lr-skip10b" class="tiny button success" onclick="lrSkip(-10);">-10</button>
+                      <button type="button" disabled id="lr-skip1b" class="tiny button success" onclick="lrSkip(-1);">-1</button>
+                      <button type="button" disabled id="lr-skip1f" class="tiny button success" onclick="lrSkip(1);">+1</button>
+                      <button type="button" disabled id="lr-skip10f" class="tiny button success" onclick="lrSkip(10);">+10</button>
+
+                      <button type="button" disabled id="lr-skip100f" class="tiny button success" onclick="lrSkip(100);">+100</button>
+                      <button type="button" disabled id="lr-skip1000f" class="tiny button success" onclick="lrSkip(1000);">+1000</button>
+
+                      <span id="play-position" style="min-width: 36px;"></span>
+
+                      <button type="button" class="tiny button clear">Recording:</button>
+                      <span class="switch tiny table-20">
+                        <input class="switch-input" id="live-rewind" type="checkbox" name="live-rewind-switch" onchange="toggleRewind();">
+                        <label class="switch-paddle warning" for="live-rewind">
+                          <span class="show-for-sr">Live rewind enabled</span>
+                          <span class="switch-active" aria-hidden="true">On</span>
+                          <span class="switch-inactive" aria-hidden="true">Off</span>
+                        </label>
+                      </span>
+
+                    </span>
+
+                    <div class="reveal" id="go-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                      <form data-abide novalidate>
+                        <div class="grid-x grid-margin-x">
+                          <div class="cell">
+                            <div data-abide-error class="alert callout" style="display: none;">
+                              <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="grid-x grid-margin-x">
+                          <div class="cell small-12">
+                            <label>Execution Address
+                                <input id="exec-address" type="text" placeholder="$e000" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                <span class="form-error">
+                                  Must be a valid memory 8-bit memory address ($xxxx, 0xNNNN, or NNNNN).
+                                </span>
+                              </label>
+                              <fieldset class="cell medium-3">
+                                  <button class="button data-close" type="submit" value="Submit" onvalid="">Submit</button>
+                              </fieldset>
+                        </div>
+                       </div>
+                      </form>
+                    </div>
+                </div>
+
+                <div class="grid-x"> 
+
+                    <div class="reveal" id="value-entry-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                        <form data-abide novalidate>
+                          <div class="grid-x grid-margin-x">
+                            <div class="cell">
+                              <div data-abide-error class="alert callout" style="display: none;">
+                                <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                              </div>
+                            </div>
+                          </div> 
+                          <div class="grid-x grid-margin-x">
+                            <div class="cell small-12">
+                              <label><span id="value-entry-prompt">Value</span>
+                                  <input id="value-entry-target" type="hidden"/>
+                                  <input id="value-entry-value" type="text" placeholder="$ff" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                  <span id="value-entry-message" class="form-error">
+                                    Must be a valid memory 8-bit memory address ($xxxx, 0xNNNN, or NNNNN).
+                                  </span>
+                                </label>
+                                <fieldset class="cell medium-3">
+                                    <button class="button data-close" type="submit" value="Submit" onvalid="">Submit</button>
+                                </fieldset>
+                          </div>
+                        </div>
+                        </form>
+                        </div>
+
+
+                  <div id="instruction-area" class="cell small-6">
+
+                    <table>
+                        <thead>
+                          <tr>
+                          <th>PC</th>
+                          <th>A</th>
+                          <th>X</th>
+                          <th>Y</th>
+                          <th>SP</th>
+                          <th>P</th>
+                          <th>CC</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td class="register" id="cpu-pc">PC</td>
+                            <td class="register" id="cpu-a">Acc</td>
+                            <td class="register" id="cpu-x">X</td>
+                            <td class="register" id="cpu-y">Y</td>
+                            <td class="register" id="cpu-sp">Stack</td>
+                            <td class="register" id="cpu-p">Status</td>
+                            <td class="register" id="cpu-cc">CC</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      <br/>
+  
+
+                      <table>
+                        <thead>
+                          <tr>
+                          <th class="table-20">Address</th>
+                          <th class="table-20">Bytes</th>
+                          <th>Opcode</th>
+                          <th class="table-20">Cycles</th>
+                        </tr>
+                        </thead>
+                        <tbody id="decode-instructions">
+                        </tbody>
+                      </table>
+
+                </div>
+
+                <div class="cell small-6">
+
+                  <div>
+                      <ul class="tabs" data-tabs id="sub-tabs">
+                          <li class="tabs-title is-active"><a href="#panel-hgr" aria-selected="true">Video</a></li>
+                          <li class="tabs-title"><a id="sttab" href="#panel-stack">Stack</a></li>
+                          <li class="tabs-title"><a id="memtab" href="#panel-memory">Memory</a></li>
+                          <li class="tabs-title"><a href="#panel-softswitches">Softswitches</a></li>
+                          <li class="tabs-title"><a id="bptab" href="#panel-breakpoints">Breakpoints</a></li>
+                          <li class="tabs-title"><a id="asmtab" href="#panel-assembler">Assembler</a></li>
+                          <li class="tabs-title"><a id="settingstab" href="#panel-settings">Settings</a></li>
+                      </ul>
+                  </div>
+                  
+                  <div class="tabs-content" data-tabs-content="sub-tabs">
+                    
+                    <div class="tabs-panel is-active" id="panel-hgr">
+                        <img id="screenshot" src="/api/debug/screen/" width=100%/>
+                    </div>
+
+                    <div class="tabs-panel" id="panel-stack">
+          
+                        <div class="grid-x"> 
+          
+                          <div class="cell small-12">
+                            <table id="stack-view">
+                                <thead>
+                                  <tr class="register">
+                                  <th>Address</th>
+                                  <th>Hex</th>
+                                  <th>Decimal</th>
+                                  <th>ASCII</th>
+                                </tr>
+                                </thead>
+                                <tbody id="decode-stack" class="register">
+                                </tbody>
+                              </table>    
+                            </div>
+          
+                        </div>
+                    </div>
+
+                    <div class="tabs-panel" id="panel-memory">
+
+
+                        <div>
+                            <ul class="tabs" data-tabs id="mem-sub-tabs">
+                                <li class="tabs-title  is-active"><a href="#panel-memory-edit">Editor</a></li>
+                                <li class="tabs-title"><a id="hmtab" href="#panel-heatmap">Heatmap</a></li>
+                                <li class="tabs-title"><a href="#panel-memory-dasm">Disassembler</a></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="tabs-content" data-tabs-content="mem-sub-tabs">
+
+                          <div class="tabs-panel  is-active" id="panel-memory-edit">
+
+                            <div class="toolbar">
+                                <button type="button" class="tiny button" onclick="prevPage(8);">&lt;&lt;</button>
+                                <button type="button" class="tiny button" onclick="prevPage(1);"> &lt;</button>
+                                <button type="button" class="tiny button" onclick="nextPage(1);"> &gt;</button>
+                                <button type="button" class="tiny button" onclick="nextPage(8);">&gt;&gt;</button>
+                                <button type="button" class="tiny button success" data-toggle="mem-dropdown">Address ...</button>
+                                <button type="button" class="tiny button success" onclick="memAddrPC();">Current</button>
+                                <button type="button" class="tiny button warning" data-toggle="mem-search-dropdown">Search ...</button>
+                                <span class="switch tiny table-20">
+                                  <input class="switch-input" id="force-aux" type="checkbox" name="rw-switch">
+                                  <label class="switch-paddle" for="force-aux">
+                                    <span class="show-for-sr">R/W Trap mode</span>
+                                    <span class="switch-active" aria-hidden="true">Aux</span>
+                                    <span class="switch-inactive" aria-hidden="true">Main</span>
+                                  </label>
+                                </span>
+                                <div class="reveal" id="mem-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                                  <form data-abide novalidate>
+                                    <div class="grid-x grid-margin-x">
+                                      <div class="cell">
+                                        <div data-abide-error class="alert callout" style="display: none;">
+                                          <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="grid-x grid-margin-x">
+                                      <div class="cell small-12">
+                                        <label>Memory View Address
+                                            <input id="memory-view-address" type="text" placeholder="$0400" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                            <span class="form-error">
+                                              Must be a valid memory 8-bit memory address ($xxxx, 0xNNNN, or NNNNN).
+                                            </span>
+                                          </label>
+                                          <fieldset class="cell medium-3">
+                                              <button class="button data-close" type="submit" value="Submit" onvalid="">Submit</button>
+                                          </fieldset>
+                                    </div>
+                                  </div>
+                                  </form>
+                                  </div>
+                                <div class="reveal" id="mem-edit-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                                    <form data-abide novalidate>
+                                        <div class="grid-x grid-margin-x">
+                                          <div class="cell">
+                                            <div data-abide-error class="alert callout" style="display: none;">
+                                              <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div class="grid-x grid-margin-x">
+                                          <div class="cell small-6">
+                                            <label>Memory Value
+                                                <input id="mem-address" type="hidden"> 
+                                                <input id="mem-value" type="text" placeholder="$ff" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                                <span class="form-error">
+                                                  Must be a valid memory 8-bit value ($xx, 0xNN, or NNN).
+                                                </span>
+                                              </label>
+                                              <p class="help-text" id="exampleHelpText">Memory value..</p>
+                                              <label>ASCII
+                                                  <input onchange="updateASCIICode();" onkeyup="updateASCIICode();" id="mem-ascii" type="text" placeholder="A" aria-describedby="exampleHelpText" pattern="([A-Za-z0-9!#$%&'()*+,.\/:;<=>?@\[\] ^_`{|}~-])">
+                                                  <span class="form-error">
+                                                    Must be a valid ASCII value.
+                                                  </span>
+                                                </label>
+                                                <p class="help-text" id="exampleHelpText">ASCII value..</p>
+                                              <fieldset class="cell medium-3">
+                                                  <button class="button data-close" type="submit" value="Submit" onvalid="updateMemory();">Submit</button>
+                                              </fieldset>
+                                        </div>
+                                        <div class="cell small-6">
+                                                <input id="mem-lock" type="checkbox" aria-describedby="exampleHelpText">
+                                                <label>Lock address
+                                                <span class="form-error">
+                                                  Must be a valid ASCII value.
+                                                </span>
+                                              </label>
+                                              <p class="help-text" id="exampleHelpText">Lock memory address against updates</p>
+                                        </div>
+                                      </div>
+                                      </form>
+                                </div>
+                                <div class="reveal" id="mem-search-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                                    <form data-abide novalidate>
+                                        <div class="grid-x grid-margin-x">
+                                          <div class="cell">
+                                            <div data-abide-error class="alert callout" style="display: none;">
+                                              <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div class="grid-x grid-margin-x">
+                                          <div class="cell small-12">
+                                            <label>Memory Sequence
+                                                <input id="mem-search-value" type="text" placeholder="$ff $01 255" aria-describedby="exampleHelpText" pattern="((0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)[ ]?)+">
+                                                <span class="form-error">
+                                                  Must be a sequence of valid 8 bit values (space separated).
+                                                </span>
+                                              </label>
+                                              <p class="help-text" id="exampleHelpText">Memory values (space separated)..</p>
+
+                                              <label>Memory String
+                                                <input id="mem-search-string" type="text" placeholder="HELLO" aria-describedby="exampleHelpText">
+                                                <span class="form-error">
+                                                  Must be a string.
+                                                </span>
+                                              </label>
+                                              <p class="help-text" id="exampleHelpText">ASCII string..</p>
+
+                                              <label>
+                                                <input id="mem-search-high" type="checkbox" placeholder="" aria-describedby="exampleHelpText">
+                                                <span class="form-error">
+                                                  Must be a string.
+                                                </span>
+                                                High Bit Set
+                                              </label>
+                                              <p class="help-text" id="exampleHelpText">Set high bit for search (Apple II).</p>
+
+                                              <fieldset class="cell medium-3">
+                                                  <button class="button data-close" type="submit" value="Submit" onvalid="searchMemory();">Search</button>
+                                              </fieldset>
+                                        </div>
+                                      </div>
+                                      </form>
+                                </div>
+                                <div class="reveal" id="mem-load-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                                  <form data-abide novalidate>
+                                      <div class="grid-x grid-margin-x">
+                                        <div class="cell">
+                                          <div data-abide-error class="alert callout" style="display: none;">
+                                            <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div class="grid-x grid-margin-x">
+                                        <div class="cell small-12">
+                                          <label>File to upload
+                                              <input id="mem-load-file" type="file" placeholder="Upload file" aria-describedby="exampleHelpText">
+                                              <span class="form-error">
+                                                Must be a sequence of valid 8 bit values (space separated).
+                                              </span>
+                                            </label>
+                                            <p class="help-text" id="exampleHelpText">File to upload..</p>
+
+                                            <label>Upload Address
+                                              <input id="mem-load-address" type="text" placeholder="$4000" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                              <span class="form-error">
+                                                Must be a valid 8 bit memory address.
+                                              </span>
+                                            </label>
+                                            <p class="help-text" id="exampleHelpText">Upload address..</p>
+
+                                            <fieldset class="cell medium-3">
+                                                <button class="button data-close" type="submit" value="Submit" onvalid="uploadBinary();">Upload Binary</button>
+                                            </fieldset>
+                                      </div>
+                                    </div>
+                                    </form>
+                              </div>
+
+                              <div class="reveal" id="asm-load-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                                  <form data-abide novalidate>
+                                      <div class="grid-x grid-margin-x">
+                                        <div class="cell">
+                                          <div data-abide-error class="alert callout" style="display: none;">
+                                            <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div class="grid-x grid-margin-x">
+                                        <div class="cell small-12">
+                                          <label>Source file to upload
+                                              <input id="asm-load-file" type="file" placeholder="Upload file" aria-describedby="exampleHelpText">
+                                              <span class="form-error">
+                                                Must be a sequence of valid 8 bit values (space separated).
+                                              </span>
+                                            </label>
+                                            <p class="help-text" id="exampleHelpText">File to upload..</p>
+
+                                            <label>Upload Address
+                                              <input id="asm-load-address" type="text" placeholder="$4000" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                              <span class="form-error">
+                                                Must be a valid 8 bit memory address.
+                                              </span>
+                                            </label>
+                                            <p class="help-text" id="exampleHelpText">Upload address..</p>
+
+                                            <fieldset class="cell medium-3">
+                                                <button class="button data-close" type="submit" value="Submit" onvalid="uploadBinary();">Upload ASM</button>
+                                            </fieldset>
+                                      </div>
+                                    </div>
+                                    </form>
+                              </div>
+
+                              <div class="reveal" id="mem-save-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                                <form data-abide novalidate>
+                                    <div class="grid-x grid-margin-x">
+                                      <div class="cell">
+                                        <div data-abide-error class="alert callout" style="display: none;">
+                                          <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="grid-x grid-margin-x">
+                                      <div class="cell small-12">
+
+                                          <input id="mem-save-mode" type="hidden" value="">
+
+                                          <label>Start Address
+                                            <input id="mem-save-address" type="text" placeholder="$4000" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                            <span class="form-error">
+                                              Must be a valid 8 bit memory address.
+                                            </span>
+                                          </label>
+                                          <p class="help-text" id="exampleHelpText">Start address..</p>
+
+                                          <label>Save length
+                                            <input id="mem-save-length" type="text" placeholder="$4000" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                            <span class="form-error">
+                                              Must be a valid 8 bit memory length.
+                                            </span>
+                                          </label>
+                                          <p class="help-text" id="exampleHelpText">Save length..</p>
+
+                                          <fieldset class="cell medium-3">
+                                              <button class="button data-close" type="submit" value="Submit" onvalid="downloadBlob();">Download Data</button>
+                                          </fieldset>
+                                    </div>
+                                  </div>
+                                  </form>
+                            </div>
+
+                            </div>
+
+                            <div id="memory-view">
+                                <label>
+                                    <input id="mem-ascii-strip" type="checkbox" placeholder="" aria-describedby="exampleHelpText">
+                                    Ignore High Bit
+                                  </label>
+                                  <p class="help-text" id="exampleHelpText">Strip high bit for ASCII view.</p>
+                              <div id="decode-memory" class="register">
+                              </div>
+                            </div>
+
+                          </div>
+
+                          <div class="tabs-panel" id="panel-heatmap">
+
+                            <form>
+                                <div class="grid-x grid-margin-x">
+                                    <div class="cell small-6">
+                                    <label>Heatmap type
+                                    <select id="heatmap-mode">
+                                      <option value="0">Off</option>
+                                      <option value="1">Main All Banks</option>
+                                      <option value="2">Aux All Banks</option>
+                                      <option value="3">Main Specific Bank</option>
+                                      <option value="4">Aux Specific Bank</option>
+                                      <option value="5">CPU Execution</option>
+                                    </select>
+                                    </label>
+                                    </div>
+                                    <div class="cell small-6">
+                                    <label>Bank Number
+                                        <input id="heatmap-bank" type="text" placeholder="$00" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                        <span class="form-error">
+                                          Must be a valid memory Bank number ($xx, 0xNN, or NNN).
+                                        </span>
+                                      </label>
+                                  </div>
+                                </div>
+                            </form>
+    
+                          <div id="heatmap-value"></div>
+                        </div>
+
+                          <div class="tabs-panel" id="panel-memory-dasm">
+
+                              <div class="toolbar">
+                                  <button type="button" class="tiny button" onclick="dasmAddrChange(-8);">&lt;&lt;</button>
+                                  <button type="button" class="tiny button" onclick="dasmAddrChange(-1);"> &lt;</button>
+                                  <button type="button" class="tiny button success" data-toggle="dasm-dropdown"><span id="dasm-addr">Address</span></button>
+                                  <button type="button" class="tiny button success" onclick="dasmAddrPC(1);">Current</button>
+                                  <button type="button" class="tiny button" onclick="dasmForward(1);"> &gt;</button>
+                                  <button type="button" class="tiny button" onclick="dasmAddrChange(8);">&gt;&gt;</button>
+
+                                  <!-- <button type="button" class="tiny button warning" data-toggle="asm-dropdown"><span id="asm-addr">Quick Assemble</span></button> -->
+                              
+                                  <!-- <span class="switch tiny table-20">
+                                    <input class="switch-input" id="dasm-force-aux" type="checkbox" name="rw-switch">
+                                    <label class="switch-paddle" for="dasm-force-aux">
+                                      <span class="show-for-sr">Disassemble Aux</span>
+                                      <span class="switch-active" aria-hidden="true">Aux</span>
+                                      <span class="switch-inactive" aria-hidden="true">Main</span>
+                                    </label>
+                                  </span> -->
+
+                              </div>
+
+                              <div class="reveal" id="pc-menu-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                                  <form data-abide novalidate>
+                                    <div class="grid-x grid-margin-x">
+                                      <div class="cell">
+                                        <div data-abide-error class="alert callout" style="display: none;">
+                                          <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="grid-x grid-margin-x">
+                                      <div class="cell small-12">
+                                        <label>Address
+                                            <input id="pc-menu-addr" type="text" placeholder="$e000" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                            <span class="form-error">
+                                              Must be a valid memory 8-bit memory address ($xxxx, 0xNNNN, or NNNNN).
+                                            </span>
+                                          </label>
+                                          <label>Action
+                                            <select id="pc-menu-mode">
+                                              <option value="0">Set ephemeral breakpoint</option>
+                                              <option value="1">Set regular breakpoint</option>
+                                              <option value="2">Set PC to addr</option>
+                                            </select>
+                                          </label>
+                                          <fieldset class="cell medium-3">
+                                              <button class="button data-close" type="submit" value="Submit" onvalid="">Submit</button>
+                                          </fieldset>
+                                    </div>
+                                   </div>
+                                  </form>
+                                </div>
+
+                              <div class="reveal" id="dasm-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                                  <form data-abide novalidate>
+                                    <div class="grid-x grid-margin-x">
+                                      <div class="cell">
+                                        <div data-abide-error class="alert callout" style="display: none;">
+                                          <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="grid-x grid-margin-x">
+                                      <div class="cell small-12">
+                                        <label>Disassemble Address
+                                            <input id="memory-dasm-address" type="text" placeholder="$2000" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                            <span class="form-error">
+                                              Must be a valid memory 8-bit memory address ($xxxx, 0xNNNN, or NNNNN).
+                                            </span>
+                                          </label>
+                                          <fieldset class="cell medium-3">
+                                              <button class="button data-close" type="submit" value="Submit" onvalid="">Submit</button>
+                                          </fieldset>
+                                    </div>
+                                  </div>
+                                  </form>
+                                  </div>
+
+                                  <div class="reveal" id="asm-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                                      <form data-abide novalidate>
+                                        <div class="grid-x grid-margin-x">
+                                          <div class="cell">
+                                            <div data-abide-error class="alert callout" style="display: none;">
+                                              <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div class="grid-x grid-margin-x">
+                                          <div class="cell small-12">
+                                            <label>Start Address
+                                                <input id="memory-asm-address" type="text" placeholder="$2000" aria-describedby="exampleHelpText" aria-required pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                                <span class="form-error">
+                                                  Must be a valid memory 8-bit memory address ($xxxx, 0xNNNN, or NNNNN).
+                                                </span>
+                                              </label>
+
+                                              <label>Source <span id="asm-status" class="register float-right">READY.</span>
+<textarea id="asm-text" rows="24" cols="80" class="register">; paste asm code here
+</textarea>
+                                                  <span class="form-error">
+                                                    Must be a valid memory 8-bit memory address ($xxxx, 0xNNNN, or NNNNN).
+                                                  </span>
+                                                </label>
+
+                                              <fieldset class="cell medium-3">
+                                                  <button class="button data-close" type="submit" value="Submit" onvalid="">Assemble</button>    
+                                              </fieldset>
+
+                                              
+                                        </div>
+                                      </div>
+                                      </form>
+                                      </div>
+
+                                  <table>
+                                      <thead>
+                                        <tr>
+                                        <th class="table-20">Address</th>
+                                        <th class="table-20">Bytes</th>
+                                        <th>Opcode</th>
+                                        <th class="table-20">Cycles</th>
+                                      </tr>
+                                      </thead>
+                                      <tbody id="dasm-instructions">
+                                      </tbody>
+                                    </table>
+
+                          </div>
+
+            
+                          <!-- <div class="grid-x"> 
+                            <div class="cell small-12">
+                              <table id="memory-view">
+                                <thead>
+                                  <tr class="register">
+                                    <th>Memory (hex)</th>
+                                    <th>ASCII</th>
+                                  </tr>
+                                </thead>
+                                <tbody id="decode-memory" class="register">
+                                </tbody>
+                              </table>    
+                            </div>
+                          </div> -->
+
+
+
+                      </div>
+
+                    </div>
+
+                    <div class="tabs-panel" id="panel-softswitches">
+                        <div class="grid-x"> 
+                            <div class="cell small-12">
+                              <table>
+                                <thead>
+                                  <tr>
+                                  <th>Soft Switch</th>
+                                  <th>Status</th>
+                                  <th colspan="2">State</th>
+                                  </tr>
+                                </thead>
+                                <tbody id="decode-video-switches-2">
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                    </div>
+
+                    <div class="tabs-panel" id="panel-breakpoints">
+
+                        <div class="toolbar">
+                            <button type="button" class="tiny button" onclick="editBp();">Add Breakpoint</button>
+                            <button type="button" class="tiny button" onclick="clearAllBreakpoints();">Clear All Breakpoints</button>
+                            <div class="reveal" id="add-bp-dropdown" data-reveal data-animation-in="hinge-in-from-top" data-animation-out="fade-out">
+                                <form data-abide novalidate>
+                                    <div class="grid-x grid-margin-x">
+                                      <div class="cell">
+                                        <div data-abide-error class="alert callout" style="display: none;">
+                                          <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="grid-x grid-margin-x">
+                                      <div class="cell large-4">
+                                        <span><b>Conditions</b></span>
+                                        <label>Program Counter
+                                          <input id="reg-pc" type="text" placeholder="$1234" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                          <span class="form-error">
+                                            Must be a valid memory 8-bit address ($xxxx, 0xNNNN, or NNNNN).
+                                          </span>
+                                        </label>
+                                        <p class="help-text" id="exampleHelpText">Program Counter ($2000, 0x2000 or 8192).</p>
+                                              <fieldset class="cell medium-6">
+                                                  <legend>Trap Memory Access</legend>
+                                                  <input type="radio" name="mem-action" value="R" checked id="mem-action-read"><label for="mem-action-read">Read</label>
+                                                  <input type="radio" name="mem-action" value="W" id="mem-action-write"><label for="mem-action-write">Write</label>
+                                                </fieldset>
+                                                <p class="help-text" id="exampleHelpText">Type of access to trap.</p>
+                                                <label class="cell medium-6">Bank
+                                                    <select id="mem-bank-trap">
+                                                    <option value="*" id="mem-bank-any" selected>Any</option>
+                                                    <option value="M" id="mem-bank-main">Main</option>
+                                                    <option value="A" id="mem-bank-aux">Aux</option>
+                                                    </select>
+                                                </label>
+                                                  <p class="help-text" id="exampleHelpText">Memory bank isolation.</p>
+                                              <label>Memory Address
+                                                  <input id="write-addr" type="text" placeholder="$1000" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                                  <span class="form-error">
+                                                    Must be a valid memory 8-bit address ($xxxx, 0xNNNN, or NNNNN).
+                                                  </span>
+                                                </label>
+                                                <p class="help-text" id="exampleHelpText">Valid address ($1000, 0x1000 or 4096).</p>
+                                                <label>R/W Value
+                                                    <input id="write-value" type="text" placeholder="$00" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                                    <span class="form-error">
+                                                      Must be a valid memory 8-bit number ($xx, 0xNN, or NNN).
+                                                    </span>
+                                                  </label>
+                                                  <p class="help-text" id="exampleHelpText">R/W memory value ($00, 0x00 or 0).</p>
+                                            </div>
+                                      <div class="cell small-4">
+                                          <span><b>&nbsp;</b></span>
+                                          <label>Stack Pointer
+                                              <input id="reg-sp" type="text" placeholder="$1ff" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                              <span class="form-error">
+                                                Must be a valid memory 8-bit address ($xxxx, 0xNNNN, or NNNNN).
+                                              </span>
+                                            </label>
+                                            <p class="help-text" id="exampleHelpText">Stack Pointer ($01ff, 0x1ff or 511).</p>
+                                          <label>A Register
+                                            <input id="reg-a" type="text" placeholder="$00" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                            <span class="form-error">
+                                              Must be a valid memory 8-bit number ($xx, 0xNN, or NNN).
+                                            </span>
+                                          </label>
+                                          <p class="help-text" id="exampleHelpText">A Register ($00, 0x00 or 0).</p>
+                                          <label>X Register
+                                              <input id="reg-x" type="text" placeholder="$00" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                              <span class="form-error">
+                                                Must be a valid memory 8-bit number ($xx, 0xNN, or NNN).
+                                              </span>
+                                            </label>
+                                            <p class="help-text" id="exampleHelpText">X Register ($00, 0x00 or 0).</p>
+                                          <label>Y Register
+                                              <input id="reg-y" type="text" placeholder="$00" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)">
+                                              <span class="form-error">
+                                                Must be a valid memory 8-bit number ($xx, 0xNN, or NNN).
+                                              </span>
+                                            </label>
+                                            <p class="help-text" id="exampleHelpText">Y Register ($00, 0x00 or 0).</p>
+                                            <label>Flags
+                                                <fieldset class="cell large-6">
+                                                    <input id="flag-n" type="checkbox"><label for="flag-n">N</label>
+                                                    <input id="flag-v" type="checkbox"><label for="flag-v">V</label>
+                                                    <input id="flag-b" type="checkbox"><label for="flag-b">B</label>
+                                                    <br/>
+                                                    <input id="flag-d" type="checkbox"><label for="flag-d">D</label>                    
+                                                    <input id="flag-i" type="checkbox"><label for="flag-i">I</label>
+                                                    <input id="flag-z" type="checkbox"><label for="flag-z">Z</label>
+                                                    <br/>
+                                                    <input id="flag-c" type="checkbox"><label for="flag-c">C</label>
+                                                  </fieldset>
+                                              </label>
+                                              <p class="help-text" id="exampleHelpText">Flags Mask ($80, 0x80 or 128).</p>
+                                        </div>
+                                        <div class="cell small-4">
+                                          <span><b>Breakpoint</b></span> 
+
+                                          <label>Action
+                                              <select id="break-action">
+                                                <option id="ba-default" value="0">Default (break)</option>
+                                                <option id="ba-text" value="1">Text</option>
+                                                <option id="ba-audio" value="2">Chime</option>
+                                                <option id="ba-trace-on" value="3">Start Trace</option>
+                                                <option id="ba-trace-off" value="4">Stop Trace</option>
+                                                <option id="ba-jump" value="5">JSR address</option>
+                                                <option id="ba-count" value="6">Increment Counter</option>
+                                                <option id="ba-speed" value="7">Set Speed</option>
+                                                <option id="ba-log" value="8">Log to Trace</option>
+                                                <option id="ba-record-on" value="9">Start Recording</option>
+                                                <option id="ba-record-off" value="10">Stop Recording</option>
+                                              </select>
+                                            </label>
+                                            <p class="help-text" id="exampleHelpText">Special action</p>
+
+                                            <label>Nth occurrence
+                                              <input id="break-on-n" type="text" placeholder="0" aria-describedby="exampleHelpText" pattern="([0-9]+)">
+                                              <span class="form-error">
+                                                Must be a valid memory 8-bit address ($xxxx, 0xNNNN, or NNNNN).
+                                              </span>
+                                            </label>
+                                            <p class="help-text" id="exampleHelpText">Perform action on count=N.</p>
+
+                                            <label>Text Message
+                                                <input id="break-text" type="text" placeholder="Breakpoint reached" aria-describedby="exampleHelpText" disabled>
+                                              </label>
+                                              <p class="help-text" id="exampleHelpText">Message to display</p>
+
+                                              <label>Jump Address
+                                                  <input id="break-jump-addr" type="text" placeholder="$1000" aria-describedby="exampleHelpText" pattern="(0x[0-9a-fA-F]+)|([$][0-9a-fA-F]+)|([0-9]+)" disabled>
+                                                  <span class="form-error">
+                                                    Must be a valid memory 8-bit address ($xxxx, 0xNNNN, or NNNNN).
+                                                  </span>
+                                                </label>
+                                                <p class="help-text" id="exampleHelpText">Valid address ($1000, 0x1000 or 4096).</p>
+
+                                                <label>CPU speed
+                                                    <select id="break-speed">
+                                                      <option value="0.25">0.25x speed</option>
+                                                      <option value="0.5">0.5 speed</option>
+                                                      <option value="1">Normal speed</option>
+                                                      <option value="2">2x speed</option>
+                                                      <option value="4">4x speed</option>
+                                                    </select>
+                                                  </label>
+                                                  <p class="help-text" id="exampleHelpText">Speed setting</p>                                             
+
+                                          <input type="hidden" id="bp-idx" value="">
+
+                                          <button class="button data-close" type="submit" value="Submit" onvalid="addBreakpoint();">Submit</button>
+
+                                          <button class="button" type="reset" value="Reset">Reset</button>
+
+                                        </div>
+                                    </div>
+                                    <!-- <div class="grid-x grid-margin-x">
+                                      <fieldset class="cell medium-6">
+                                        <button class="button data-close" type="submit" value="Submit" onvalid="addBreakpoint();">Submit</button>
+                                      </fieldset>
+                                      <fieldset class="cell medium-6">
+                                        <button class="button" type="reset" value="Reset">Reset</button>
+                                      </fieldset>
+                                    </div> -->
+                                  </form>
+                            </div>
+                        </div>
+                        <table>
+                            <thead>
+                              <tr>
+                              <th>Breakpoint ID</th>
+                              <th>Conditions</th>
+                              <th width="96">Count</th>
+                              <th style='text-align: right;'>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody id="breakpoint-list">
+                            </tbody>
+                          </table>
+
+                    </div>
+
+                    <div class="tabs-panel" id="panel-settings">
+                        <form data-abide novalidate id="settings-dropdown">
+                            <div class="grid-x grid-margin-x">
+                              <div class="cell">
+                                <div data-abide-error class="alert callout" style="display: none;">
+                                  <p><i class="fi-alert"></i> There are some errors in your form.</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="grid-x grid-margin-x">
+                              <div class="cell small-4">
+                                <label>Freerun update MS
+                                  <input id="cpu-update-ms" type="text" placeholder="1000" aria-describedby="exampleHelpText" pattern="([0-9]+)">
+                                  <span class="form-error">
+                                    Number of milliseconds between running CPU updates.
+                                  </span>
+                                </label>
+                                <p class="help-text" id="exampleHelpText">CPU update MS.</p>
+                                <label>Screen Update Interval (ms)
+                                    <input id="screen-refresh-ms" type="text" placeholder="20" aria-describedby="exampleHelpText" pattern="([0-9]+)">
+                                    <span class="form-error">
+                                      Number of ms between screen updates (0 for no updates).
+                                    </span>
+                                  </label>
+                                  <p class="help-text" id="exampleHelpText">Number of ms between screen updates (0 for no updates).</p>
+                                  <label>Recording timing points per second
+                                      <input id="cpu-record-timing" type="text" placeholder="10" aria-describedby="exampleHelpText" pattern="([0-9]+)">
+                                      <span class="form-error">
+                                        Number CPU timing points per second during recording.
+                                      </span>
+                                    </label>
+                                    <p class="help-text" id="exampleHelpText">Number CPU timing points per second during recording.</p>
+                                </div>
+                                <div class="cell small-4">
+                                <label>CPU Backlog lines
+                                    <input id="cpu-backlog-lines" type="text" placeholder="20" aria-describedby="exampleHelpText" pattern="([0-9]+)">
+                                    <span class="form-error">
+                                      Number of lines in disassembly (backlog).
+                                    </span>
+                                  </label>
+                                  <p class="help-text" id="exampleHelpText">Number of disassembly lines (backlog).</p>
+                                  <label>CPU Lookahead lines
+                                    <input id="cpu-lookahead-lines" type="text" placeholder="20" aria-describedby="exampleHelpText" pattern="([0-9]+)">
+                                    <span class="form-error">
+                                      Number of lines in disassembly (lookahead).
+                                    </span>
+                                  </label>
+                                  <p class="help-text" id="exampleHelpText">Number of disassembly lines (lookahead).</p>
+                                  <label>
+                                    <input id="cpu-full-record" type="checkbox" placeholder="20" aria-describedby="exampleHelpText">
+                                    Record all CPU changes
+                                  </label>
+                                  <p class="help-text" id="exampleHelpText">All CPU instructions recorded (Warning large disk usage!).</p>
+                                </div>
+                                <div class="cell small-4">
+                                       <label>
+                                        <input id="cpu-break-brk" type="checkbox" placeholder="20" aria-describedby="exampleHelpText">
+                                        Break on BRK
+                                      </label>
+                                      <p class="help-text" id="exampleHelpText">Break 6502 on opcode $00.</p>
+
+                                      <label>
+                                          <input id="cpu-break-ill" type="checkbox" placeholder="20" aria-describedby="exampleHelpText">
+                                          Break on Illegal opcode
+                                        </label>
+                                        <p class="help-text" id="exampleHelpText">Break 6502 on illegal opcodes.</p>
+
+                                        <label>
+                                          <input id="save-on-submit" type="checkbox" placeholder="20" aria-describedby="exampleHelpText">
+                                          Save settings on submit
+                                        </label>
+                                        <p class="help-text" id="exampleHelpText">Persist these settings to disk on submit for future use.</p>
+                                </div>
+                            </div>
+                            <div class="grid-x grid-margin-x">
+                              <fieldset class="cell medium-6">
+                                <button class="button data-close" type="submit" value="Submit" onvalid="addBreakpoint();">Submit</button>
+                              </fieldset>
+                              <fieldset class="cell medium-6">
+                                <button class="button" type="reset" value="Reset">Reset</button>
+                              </fieldset>
+                            </div>
+                          </form>
+                    </div>
+
+                    <div class="tabs-panel" id="panel-assembler">
+                        <div class="grid-x grid-margin-x">
+                            <div class="cell small-12">
+                                <label>Assembly Code
+                                    <textarea id="assembler-text" rows="20" cols="80" class="register" placeholder="; Enter your assembly code here
+; Example:
+;   LDA #$01
+;   STA $0400
+;   RTS"></textarea>
+                                </label>
+                                <button type="button" class="button" onclick="assembleCode();">Assemble</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+              </div>
+              
+
+
+        </div>
+
+        </div>
+
+        </div>
+
+        <div class="footer" id="footermessage">
+          <p>This is a test.</p>
+        </div>
+
+    <script src="js/vendor/jquery.js"></script>
+    <script src="js/vendor/what-input.js"></script>
+    <script src="js/vendor/foundation.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/debug.js"></script>
+    <script src="js/sprintf.js"></script>
+    <script src="js/ws.js"></script>
+  </body>
+</html>

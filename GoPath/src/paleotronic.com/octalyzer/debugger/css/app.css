@@ -1,0 +1,186 @@
+html, body {
+    height: 100%;
+    font-height: 9pt;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.disabled-bp {
+    color: #808080;
+    text-decoration: line-through;
+}
+
+.tabs {
+    padding: 0px;
+    margin: 0px;
+    min-height: 48px;
+}
+
+.tabs-title {
+    padding: 0px;
+    margin: 0px;
+    min-height: 48px;
+}
+
+.switchon {
+    font-weight: 700;
+    color: darkgreen;
+    padding: 0px;
+    margin: 0px;
+    text-align: center;
+    width: 5vw;
+}
+
+.switchoff {
+    color:darkgray;
+    padding: 0px;
+    margin: 0px;
+    text-align: center;
+    width: 5vw;
+}
+
+#decode-memory {
+    overflow-x: scroll;
+    overflow-y: scroll;
+    min-height: 50vh;
+    min-width: 45vw;
+    white-space: nowrap;
+}
+
+.speed {
+    width: 36px;
+}
+
+.header {
+    min-height: 72px;
+    flex-direction: row;
+}
+
+.footer {
+    min-height: 32px;
+}
+
+.content {
+    flex-grow: 1;
+    overflow-y: scroll;
+}
+
+.toolbar {
+    min-width: 100%;
+    max-width: 100%;
+    max-height: 96px;
+    padding: 0px;    
+}
+
+.table-20 {
+        width: 20%;
+}
+
+.tool-window {
+    display: flex;
+    flex-flow: column;
+    overflow-y: scroll;
+    height: 100%;
+}
+
+.register {
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    font-size: 10pt;
+    padding: 0px;
+}
+
+.hexdump {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10pt;
+}
+
+.asciidump {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10pt;
+}
+
+#message {
+    font-size: 8pt;
+}
+
+li:hover {
+    background-color: lightgray;
+}
+
+li.a:hover {
+    background-color: lightgray;
+}
+
+.current {
+    background-color: aquamarine;
+}
+
+.hexbutton {
+    color: black;
+    padding: 2px;
+}
+
+.hexbutton.highlight {
+    color: darkred;
+    background-color:pink;
+    padding: 2px;
+}
+
+.hexbutton:hover {
+    color: white;
+    background-color: dodgerblue;
+}
+
+.tab-panel {
+    padding-bottom: 0px;
+    padding-top: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    border: 0px;
+}
+
+table, tr, td, th, thead, tbody {
+    font-size: 9pt;
+    padding-bottom: 0px;
+    padding-top: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    vertical-align: center;
+}
+
+table {
+    overflow: auto;
+}
+
+.warp {
+    background-color: lightgreen;
+}
+
+.alert {
+    background-color: pink;
+}
+
+.padded {
+    padding: 2px;
+}
+
+warp {
+    color: lightskyblue;
+    background-color: royalblue;
+}
+
+.button.disabled.warp, .button.disabled.warp:hover, .button.disabled.warp:focus, .button[disabled].warp, .button[disabled].warp:hover, .button[disabled].warp:focus {
+    background-color: royalblue;
+    color: lightskyblue; 
+}
+.button.warp {
+    background-color: royalblue;
+    color: lightskyblue; 
+}
+.button.warp:hover, .button.warp:focus {
+    background-color: royalblue;
+    color: lightskyblue; 
+}
